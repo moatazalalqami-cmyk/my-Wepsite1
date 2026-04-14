@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(ADMIN)
+  image     String?
+  posts     Post[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id            String     @id @default(cuid())
+  title         String
+  slug          String     @unique
+  excerpt       String?    @db.Text
+  content       String     @db.Text
+  featuredImage String?
+  status        PostStatus @default(DRAFT)
+  seoTitle      String?
+  seoDesc       String?
+  authorId      String
+  author        User       @relation(fields: [authorId], references: [id])
+  categoryId    String?
+  category      Category?  @relation(fields: [categoryId], references: [id])
+  tags          Tag[]
+  comments      Comment[]
+  publishedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  posts       Post[]
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+  posts Post[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  content   String   @db.Text
+  isApproved Boolean @default(false)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Newsletter {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model SiteSettings {
+  id            String @id @default("global")
+  siteName      String @default("معتز العلقمي")
+  siteDesc      String
+  featuredPostId String?
+}
